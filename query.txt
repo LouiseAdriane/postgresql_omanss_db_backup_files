@@ -1,0 +1,19 @@
+SELECT
+    table_schema || '.' || table_name   AS table_name,
+    grantee                             AS role_name,
+    string_agg(
+        CASE privilege_type
+            WHEN 'SELECT'     THEN 'r'
+            WHEN 'INSERT'     THEN 'a'
+            WHEN 'UPDATE'     THEN 'w'
+            WHEN 'DELETE'     THEN 'd'
+            WHEN 'TRUNCATE'   THEN 'D'
+            WHEN 'REFERENCES' THEN 'x'
+            WHEN 'TRIGGER'    THEN 't'
+        END
+    ORDER BY privilege_type)            AS privileges
+FROM information_schema.role_table_grants
+WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+  AND grantee LIKE 'omanss_%'          -- filter to your roles only
+GROUP BY table_schema, table_name, grantee
+\crosstabview table_name role_name privileges
